@@ -1,4 +1,4 @@
-"""The Modified Differential Multiplier Method (MDMM)."""
+"""The Modified Differential Multiplier Method (MDMM) for PyTorch."""
 
 import abc
 
@@ -7,6 +7,8 @@ from torch import nn, optim
 
 
 class Constraint(nn.Module, metaclass=abc.ABCMeta):
+    """The parent class for all constraints."""
+
     def __init__(self, fn, damping):
         super().__init__()
         self.fn = fn
@@ -25,6 +27,8 @@ class Constraint(nn.Module, metaclass=abc.ABCMeta):
 
 
 class EqConstraint(Constraint):
+    """Represents an equality constraint."""
+
     def __init__(self, fn, value, damping=1e-2):
         super().__init__(fn, damping)
         self.register_buffer('value', torch.as_tensor(value))
@@ -37,6 +41,8 @@ class EqConstraint(Constraint):
 
 
 class MaxConstraint(Constraint):
+    """Represents a maximum inequality constraint which uses a slack variable."""
+
     def __init__(self, fn, max, damping=1e-2):
         super().__init__(fn, damping)
         loss = self.fn()
@@ -51,6 +57,8 @@ class MaxConstraint(Constraint):
 
 
 class MaxConstraintHard(Constraint):
+    """Represents a maximum inequality constraint without a slack variable."""
+
     def __init__(self, fn, max, damping=1e-2):
         super().__init__(fn, damping)
         self.register_buffer('max', torch.as_tensor(max))
@@ -63,6 +71,8 @@ class MaxConstraintHard(Constraint):
 
 
 class MinConstraint(Constraint):
+    """Represents a minimum inequality constraint which uses a slack variable."""
+
     def __init__(self, fn, min, damping=1e-2):
         super().__init__(fn, damping)
         loss = self.fn()
@@ -77,6 +87,8 @@ class MinConstraint(Constraint):
 
 
 class MinConstraintHard(Constraint):
+    """Represents a minimum inequality constraint without a slack variable."""
+
     def __init__(self, fn, min, damping=1e-2):
         super().__init__(fn, damping)
         self.register_buffer('min', torch.as_tensor(min))
@@ -89,6 +101,8 @@ class MinConstraintHard(Constraint):
 
 
 class BoundConstraintHard(Constraint):
+    """Represents a bound constraint."""
+
     def __init__(self, fn, min, max, damping=1e-2):
         super().__init__(fn, damping)
         self.register_buffer('min', torch.as_tensor(min))
@@ -102,6 +116,8 @@ class BoundConstraintHard(Constraint):
 
 
 class MDMM(nn.ModuleList):
+    """The main MDMM class, which combines multiple constraints."""
+
     def make_optimizer(self, params, *, optimizer=optim.Adamax, lr=2e-3):
         lambdas = [c.lmbda for c in self]
         slacks = [c.slack for c in self if hasattr(c, 'slack')]
