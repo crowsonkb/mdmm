@@ -33,6 +33,7 @@ def main():
         nn.Flatten(),
         nn.Linear(16 * 7 * 7, 10),
     ).to(device)
+    print('Parameters:', sum(param.numel() for param in model.parameters()))
 
     crit = nn.CrossEntropyLoss()
 
