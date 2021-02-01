@@ -14,6 +14,7 @@ EPOCHS = 100
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print('Using device:', device)
+    torch.manual_seed(0)
 
     tf = transforms.ToTensor()
     train_set = datasets.MNIST('data/mnist', download=True, transform=tf)
