@@ -46,7 +46,7 @@ def main():
             constraints.append(make_constraint(layer))
 
     mdmm_module = mdmm.MDMM(constraints)
-    opt = mdmm_module.make_optimizer(model.parameters())
+    opt = mdmm_module.make_optimizer(model.parameters(), lr=0.02)
 
     def train():
         model.train()
