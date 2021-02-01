@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import csv
+
 import torch
 from torch import nn
 from torch.utils import data
@@ -48,6 +50,9 @@ def main():
     mdmm_module = mdmm.MDMM(constraints)
     opt = mdmm_module.make_optimizer(model.parameters(), lr=0.02)
 
+    writer = csv.writer(open('mdmm_demo_mnist.csv', 'w'))
+    writer.writerow(['loss', 'norm_1', 'norm_2', 'norm_3'])
+
     def train():
         model.train()
         i = 0
@@ -60,6 +65,7 @@ def main():
             loss = crit(outputs, targets)
             losses.append(loss)
             lagrangian, norms = mdmm_module(loss)
+            writer.writerow([loss.item(), *(norm.item() for norm in norms)])
             opt.zero_grad()
             lagrangian.backward()
             opt.step()

@@ -3,4 +3,5 @@ __pycache__
 .ipynb_checkpoints
 *.egg-info
 out.*
+*.csv
 data

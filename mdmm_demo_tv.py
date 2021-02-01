@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import csv
 
 from PIL import Image
 import torch
@@ -54,16 +55,18 @@ def main():
     mdmm_mod = mdmm.MDMM([constraint])
     opt = mdmm_mod.make_optimizer([input], lr=args.lr)
 
+    writer = csv.writer(open('mdmm_demo_tv.csv', 'w'))
+    writer.writerow(['l2_loss', 'tv_loss'])
+
     try:
         i = 0
         while True:
             i += 1
             loss = crit_l2(input, target)
             lagrangian, losses = mdmm_mod(loss)
+            writer.writerow([loss.item() / input.numel(), losses[0].item() / input.numel()])
             msg = '{} l2={:g}, tv={:g}'
-            print(msg.format(i,
-                             loss.item() / input.numel(),
-                             losses[0].item() / input.numel()))
+            print(msg.format(i, loss.item() / input.numel(), losses[0].item() / input.numel()))
             if not lagrangian.isfinite():
                 break
             opt.zero_grad()
