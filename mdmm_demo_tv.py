@@ -28,10 +28,10 @@ def main():
                    help='the output image')
     p.add_argument('--max-tv', type=float, default=0.02,
                    help='the maximum allowable total variation per sample')
-    p.add_argument('--strength', type=float, default=1.,
-                   help='the constraint strength')
+    p.add_argument('--scale', type=float, default=1.,
+                   help='the infeasibility scale factor')
     p.add_argument('--damping', type=float, default=1e-2,
-                   help='the constraint damping strength')
+                   help='the damping strength')
     p.add_argument('--lr', type=float, default=2e-3,
                    help='the learning rate')
     args = p.parse_args()
@@ -50,7 +50,7 @@ def main():
     crit_tv = TVLoss()
     max_tv = args.max_tv * input.numel()
 
-    constraint = mdmm.MaxConstraint(lambda: crit_tv(input), max_tv, args.strength, args.damping)
+    constraint = mdmm.MaxConstraint(lambda: crit_tv(input), max_tv, args.scale, args.damping)
     mdmm_mod = mdmm.MDMM([constraint])
     opt = mdmm_mod.make_optimizer([input], lr=args.lr)
 
