@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import csv
 
 import torch
@@ -14,6 +15,17 @@ EPOCHS = 100
 
 
 def main():
+    p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    p.add_argument('--norm', type=float, default=1.,
+                   help='the target layer norm')
+    p.add_argument('--scale', type=float, default=1.,
+                   help='the infeasibility scale factor')
+    p.add_argument('--damping', type=float, default=20.,
+                   help='the damping strength')
+    p.add_argument('--lr', type=float, default=0.02,
+                   help='the learning rate')
+    args = p.parse_args()
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print('Using device:', device)
     torch.manual_seed(0)
@@ -40,7 +52,8 @@ def main():
     crit = nn.CrossEntropyLoss()
 
     def make_constraint(layer):
-        return mdmm.EqConstraint(lambda: layer.weight.abs().mean(), 1, damping=20)
+        return mdmm.EqConstraint(lambda: layer.weight.abs().mean(), args.norm,
+                                 scale=args.scale, damping=args.damping)
 
     constraints = []
     for layer in model:
@@ -48,7 +61,7 @@ def main():
             constraints.append(make_constraint(layer))
 
     mdmm_module = mdmm.MDMM(constraints)
-    opt = mdmm_module.make_optimizer(model.parameters(), lr=0.02)
+    opt = mdmm_module.make_optimizer(model.parameters(), lr=args.lr)
 
     writer = csv.writer(open('mdmm_demo_mnist.csv', 'w'))
     writer.writerow(['loss', 'norm_1', 'norm_2', 'norm_3'])
