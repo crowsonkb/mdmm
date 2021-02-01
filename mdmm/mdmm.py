@@ -9,9 +9,10 @@ from torch import nn, optim
 class Constraint(nn.Module, metaclass=abc.ABCMeta):
     """The parent class for all constraints."""
 
-    def __init__(self, fn, damping):
+    def __init__(self, fn, strength, damping):
         super().__init__()
         self.fn = fn
+        self.register_buffer('strength', torch.as_tensor(strength))
         self.register_buffer('damping', torch.as_tensor(damping))
         self.lmbda = nn.Parameter(torch.tensor(0.))
 
@@ -22,19 +23,20 @@ class Constraint(nn.Module, metaclass=abc.ABCMeta):
     def forward(self):
         loss = self.fn()
         c_value = self.c_value(loss)
-        output = self.damping * c_value**2 / 2 - self.lmbda * c_value
-        return output, loss
+        c_term = self.lmbda * c_value
+        damp_term = self.damping * c_value**2 / 2
+        return self.strength * (damp_term - c_term), loss
 
 
 class EqConstraint(Constraint):
     """Represents an equality constraint."""
 
-    def __init__(self, fn, value, damping=1e-2):
-        super().__init__(fn, damping)
+    def __init__(self, fn, value, strength=1., damping=1.):
+        super().__init__(fn, strength, damping)
         self.register_buffer('value', torch.as_tensor(value))
 
     def extra_repr(self):
-        return f'value={self.value:g}, damping={self.damping:g}'
+        return f'value={self.value:g}, strength={self.strength:g}, damping={self.damping:g}'
 
     def c_value(self, loss):
         return self.value - loss
@@ -43,14 +45,14 @@ class EqConstraint(Constraint):
 class MaxConstraint(Constraint):
     """Represents a maximum inequality constraint which uses a slack variable."""
 
-    def __init__(self, fn, max, damping=1e-2):
-        super().__init__(fn, damping)
+    def __init__(self, fn, max, strength=1., damping=1.):
+        super().__init__(fn, strength, damping)
         loss = self.fn()
         self.register_buffer('max', loss.new_tensor(max))
         self.slack = nn.Parameter((self.max - loss).relu().pow(1/2))
 
     def extra_repr(self):
-        return f'max={self.max:g}, damping={self.damping:g}'
+        return f'max={self.max:g}, strength={self.strength:g}, damping={self.damping:g}'
 
     def c_value(self, loss):
         return self.max - loss - self.slack**2
@@ -59,12 +61,12 @@ class MaxConstraint(Constraint):
 class MaxConstraintHard(Constraint):
     """Represents a maximum inequality constraint without a slack variable."""
 
-    def __init__(self, fn, max, damping=1e-2):
-        super().__init__(fn, damping)
+    def __init__(self, fn, max, strength=1., damping=1.):
+        super().__init__(fn, strength, damping)
         self.register_buffer('max', torch.as_tensor(max))
 
     def extra_repr(self):
-        return f'max={self.max:g}, damping={self.damping:g}'
+        return f'max={self.max:g}, strength={self.strength:g}, damping={self.damping:g}'
 
     def c_value(self, loss):
         return loss.clamp(max=self.max) - loss
@@ -73,14 +75,14 @@ class MaxConstraintHard(Constraint):
 class MinConstraint(Constraint):
     """Represents a minimum inequality constraint which uses a slack variable."""
 
-    def __init__(self, fn, min, damping=1e-2):
-        super().__init__(fn, damping)
+    def __init__(self, fn, min, strength=1., damping=1.):
+        super().__init__(fn, strength, damping)
         loss = self.fn()
         self.register_buffer('min', loss.new_tensor(min))
         self.slack = nn.Parameter((loss - self.min).relu().pow(1/2))
 
     def extra_repr(self):
-        return f'min={self.min:g}, damping={self.damping:g}'
+        return f'min={self.min:g}, strength={self.strength:g}, damping={self.damping:g}'
 
     def c_value(self, loss):
         return loss - self.min - self.slack**2
@@ -89,12 +91,12 @@ class MinConstraint(Constraint):
 class MinConstraintHard(Constraint):
     """Represents a minimum inequality constraint without a slack variable."""
 
-    def __init__(self, fn, min, damping=1e-2):
-        super().__init__(fn, damping)
+    def __init__(self, fn, min, strength=1., damping=1.):
+        super().__init__(fn, strength, damping)
         self.register_buffer('min', torch.as_tensor(min))
 
     def extra_repr(self):
-        return f'min={self.min:g}, damping={self.damping:g}'
+        return f'min={self.min:g}, strength={self.strength:g}, damping={self.damping:g}'
 
     def c_value(self, loss):
         return loss.clamp(min=self.min) - loss
@@ -103,13 +105,14 @@ class MinConstraintHard(Constraint):
 class BoundConstraintHard(Constraint):
     """Represents a bound constraint."""
 
-    def __init__(self, fn, min, max, damping=1e-2):
-        super().__init__(fn, damping)
+    def __init__(self, fn, min, max, strength=1., damping=1.):
+        super().__init__(fn, strength, damping)
         self.register_buffer('min', torch.as_tensor(min))
         self.register_buffer('max', torch.as_tensor(max))
 
     def extra_repr(self):
-        return f'min={self.min:g}, max={self.max:g}, damping={self.damping:g}'
+        return f'min={self.min:g}, max={self.max:g}, ' \
+               f'strength={self.strength:g}, damping={self.damping:g}'
 
     def c_value(self, loss):
         return loss.clamp(self.min, self.max) - loss
