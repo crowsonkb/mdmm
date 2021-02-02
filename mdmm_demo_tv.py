@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+"""Total variation image denoising using MDMM to enforce a max constraint on
+the image total variation."""
+
 import argparse
 import csv
 

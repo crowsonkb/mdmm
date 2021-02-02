@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""An MNIST classifier using MDMM to enforce layer norm constraints."""
+
 import argparse
 import csv
 
