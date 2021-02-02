@@ -10,7 +10,7 @@ from torch import nn, optim
 
 @dataclass
 class ConstraintReturn:
-    """The return type for Constraint."""
+    """The return type for constraints."""
     value: torch.Tensor
     fn_value: torch.Tensor
     inf: torch.Tensor
