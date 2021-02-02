@@ -52,8 +52,8 @@ def main():
     max_tv = args.max_tv * input.numel()
 
     constraint = mdmm.MaxConstraint(lambda: crit_tv(input), max_tv, args.scale, args.damping)
-    mdmm_mod = mdmm.MDMM([constraint])
-    opt = mdmm_mod.make_optimizer([input], lr=args.lr)
+    mdmm_module = mdmm.MDMM([constraint])
+    opt = mdmm_module.make_optimizer([input], lr=args.lr)
 
     writer = csv.writer(open('mdmm_demo_tv.csv', 'w'))
     writer.writerow(['l2_loss', 'tv_loss'])
@@ -63,14 +63,16 @@ def main():
         while True:
             i += 1
             loss = crit_l2(input, target)
-            lagrangian, fn_values = mdmm_mod(loss)
-            writer.writerow([loss.item() / input.numel(), fn_values[0].item() / input.numel()])
+            mdmm_return = mdmm_module(loss)
+            writer.writerow([loss.item() / input.numel(),
+                             mdmm_return.fn_values[0].item() / input.numel()])
             msg = '{} l2={:g}, tv={:g}'
-            print(msg.format(i, loss.item() / input.numel(), fn_values[0].item() / input.numel()))
-            if not lagrangian.isfinite():
+            print(msg.format(i, loss.item() / input.numel(),
+                             mdmm_return.fn_values[0].item() / input.numel()))
+            if not mdmm_return.value.isfinite():
                 break
             opt.zero_grad()
-            lagrangian.backward()
+            mdmm_return.value.backward()
             opt.step()
     except KeyboardInterrupt:
         pass

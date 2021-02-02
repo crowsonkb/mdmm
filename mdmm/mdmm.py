@@ -1,9 +1,19 @@
 """The Modified Differential Multiplier Method (MDMM) for PyTorch."""
 
 import abc
+from dataclasses import dataclass
+from typing import List
 
 import torch
 from torch import nn, optim
+
+
+@dataclass
+class ConstraintReturn:
+    """The return type for Constraint."""
+    value: torch.Tensor
+    fn_value: torch.Tensor
+    inf: torch.Tensor
 
 
 class Constraint(nn.Module, metaclass=abc.ABCMeta):
@@ -25,7 +35,7 @@ class Constraint(nn.Module, metaclass=abc.ABCMeta):
         inf = self.infeasibility(fn_value)
         l_term = self.lmbda * inf
         damp_term = self.damping * inf**2 / 2
-        return self.scale * (damp_term - l_term), fn_value
+        return ConstraintReturn(self.scale * (damp_term - l_term), fn_value, inf)
 
 
 class EqConstraint(Constraint):
@@ -118,6 +128,14 @@ class BoundConstraintHard(Constraint):
         return fn_value.clamp(self.min, self.max) - fn_value
 
 
+@dataclass
+class MDMMReturn:
+    """The return type for MDMM."""
+    value: torch.Tensor
+    fn_values: List[torch.Tensor]
+    infs: List[torch.Tensor]
+
+
 class MDMM(nn.ModuleList):
     """The main MDMM class, which combines multiple constraints."""
 
@@ -129,10 +147,11 @@ class MDMM(nn.ModuleList):
                           {'params': slacks, 'lr': lr}])
 
     def forward(self, loss):
-        output = loss.clone()
-        fn_values = []
+        value = loss.clone()
+        fn_values, infs = [], []
         for c in self:
-            penalty, fn_value = c()
-            output += penalty
-            fn_values.append(fn_value)
-        return output, fn_values
+            c_return = c()
+            value += c_return.value
+            fn_values.append(c_return.fn_value)
+            infs.append(c_return.inf)
+        return MDMMReturn(value, fn_values, infs)

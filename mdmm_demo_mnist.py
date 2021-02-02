@@ -77,14 +77,15 @@ def main():
             outputs = model(inputs)
             loss = crit(outputs, targets)
             losses.append(loss)
-            lagrangian, norms = mdmm_module(loss)
-            writer.writerow([loss.item(), *(norm.item() for norm in norms)])
+            mdmm_return = mdmm_module(loss)
+            writer.writerow([loss.item(), *(norm.item() for norm in mdmm_return.fn_values)])
             opt.zero_grad()
-            lagrangian.backward()
+            mdmm_return.value.backward()
             opt.step()
             if i % 100 == 0:
                 print(f'{i} {sum(losses[-100:]) / 100:g}')
-                print('Layer weight norms:', *(f'{norm.item():g}' for norm in norms))
+                print('Layer weight norms:',
+                      *(f'{norm.item():g}' for norm in mdmm_return.fn_values))
 
     def val():
         print('Validating...')
