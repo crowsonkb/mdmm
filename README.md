@@ -4,7 +4,7 @@
 
 Here is a plot of the training loss and layer norms of `mdmm_demo_mnist.py`. Each of its three layers has an equality constraint that the mean absolute value of its weights be 1:
 
-<img src="doc_images/mnist_layer_norms.png" width="561" height="423">
+<img src="https://raw.githubusercontent.com/crowsonkb/mdmm/master/doc_images/mnist_layer_norms.png" width="561" height="423">
 
 ## Basic usage
 
