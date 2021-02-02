@@ -7,7 +7,7 @@ from torch import nn, optim
 
 
 class Constraint(nn.Module, metaclass=abc.ABCMeta):
-    """The parent class for all constraints."""
+    """The base class for all constraint types."""
 
     def __init__(self, fn, scale, damping):
         super().__init__()
