@@ -18,6 +18,8 @@ mdmm_module = mdmm.MDMM([constraint])
 opt = mdmm_module.make_optimizer(model.parameters(), lr=2e-3)
 ```
 
+The first argument to the constraint constructor should be a differentiable function that takes no arguments and returns a zero-dimensional PyTorch `Tensor` (a single value).
+
 MDMM constraints introduce extra parameters (Lagrange multipliers and slack variables) which must be included in the optimizer. Each `MaxConstraint` and `MinConstraint` introduces two parameters each, while all of the other constraint types introduce one. `make_optimizer()` accepts an optional optimizer factory keyword argument, `optimizer`, which can be set to a `torch.optim` class; use `functools.partial()` on the class to set the optimizer's arguments to non-default values. The default optimizer type is Adamax.
 
 Inside your training loop, do:
