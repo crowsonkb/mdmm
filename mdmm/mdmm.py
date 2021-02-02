@@ -68,7 +68,8 @@ class MaxConstraint(Constraint):
 
     def infeasibility(self, fn_value):
         if self.slack.isnan():
-            self.slack = nn.Parameter((self.max - fn_value).relu().pow(1/2))
+            with torch.no_grad():
+                self.slack.copy_((self.max - fn_value).relu().pow(1/2))
         return self.max - fn_value - self.slack**2
 
 
@@ -99,7 +100,8 @@ class MinConstraint(Constraint):
 
     def infeasibility(self, fn_value):
         if self.slack.isnan():
-            self.slack = nn.Parameter((fn_value - self.min).relu().pow(1/2))
+            with torch.no_grad():
+                self.slack.copy_((fn_value - self.min).relu().pow(1/2))
         return fn_value - self.min - self.slack**2
 
 
