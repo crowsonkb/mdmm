@@ -26,6 +26,9 @@ class Constraint(nn.Module, metaclass=abc.ABCMeta):
         self.register_buffer('damping', torch.as_tensor(damping))
         self.lmbda = nn.Parameter(torch.tensor(0.))
 
+    def extra_repr(self):
+        return f'scale={self.scale:g}, damping={self.damping:g}'
+
     @abc.abstractmethod
     def infeasibility(self, fn_value):
         ...
