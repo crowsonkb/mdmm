@@ -63,10 +63,10 @@ def main():
         while True:
             i += 1
             loss = crit_l2(input, target)
-            lagrangian, losses = mdmm_mod(loss)
-            writer.writerow([loss.item() / input.numel(), losses[0].item() / input.numel()])
+            lagrangian, fn_values = mdmm_mod(loss)
+            writer.writerow([loss.item() / input.numel(), fn_values[0].item() / input.numel()])
             msg = '{} l2={:g}, tv={:g}'
-            print(msg.format(i, loss.item() / input.numel(), losses[0].item() / input.numel()))
+            print(msg.format(i, loss.item() / input.numel(), fn_values[0].item() / input.numel()))
             if not lagrangian.isfinite():
                 break
             opt.zero_grad()

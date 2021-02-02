@@ -17,15 +17,15 @@ class Constraint(nn.Module, metaclass=abc.ABCMeta):
         self.lmbda = nn.Parameter(torch.tensor(0.))
 
     @abc.abstractmethod
-    def infeasibility(self, loss):
+    def infeasibility(self, fn_value):
         ...
 
     def forward(self):
-        loss = self.fn()
-        inf = self.infeasibility(loss)
+        fn_value = self.fn()
+        inf = self.infeasibility(fn_value)
         l_term = self.lmbda * inf
         damp_term = self.damping * inf**2 / 2
-        return self.scale * (damp_term - l_term), loss
+        return self.scale * (damp_term - l_term), fn_value
 
 
 class EqConstraint(Constraint):
@@ -38,8 +38,8 @@ class EqConstraint(Constraint):
     def extra_repr(self):
         return f'value={self.value:g}, scale={self.scale:g}, damping={self.damping:g}'
 
-    def infeasibility(self, loss):
-        return self.value - loss
+    def infeasibility(self, fn_value):
+        return self.value - fn_value
 
 
 class MaxConstraint(Constraint):
@@ -47,15 +47,15 @@ class MaxConstraint(Constraint):
 
     def __init__(self, fn, max, scale=1., damping=1.):
         super().__init__(fn, scale, damping)
-        loss = self.fn()
-        self.register_buffer('max', loss.new_tensor(max))
-        self.slack = nn.Parameter((self.max - loss).relu().pow(1/2))
+        fn_value = self.fn()
+        self.register_buffer('max', fn_value.new_tensor(max))
+        self.slack = nn.Parameter((self.max - fn_value).relu().pow(1/2))
 
     def extra_repr(self):
         return f'max={self.max:g}, scale={self.scale:g}, damping={self.damping:g}'
 
-    def infeasibility(self, loss):
-        return self.max - loss - self.slack**2
+    def infeasibility(self, fn_value):
+        return self.max - fn_value - self.slack**2
 
 
 class MaxConstraintHard(Constraint):
@@ -68,8 +68,8 @@ class MaxConstraintHard(Constraint):
     def extra_repr(self):
         return f'max={self.max:g}, scale={self.scale:g}, damping={self.damping:g}'
 
-    def infeasibility(self, loss):
-        return loss.clamp(max=self.max) - loss
+    def infeasibility(self, fn_value):
+        return fn_value.clamp(max=self.max) - fn_value
 
 
 class MinConstraint(Constraint):
@@ -77,15 +77,15 @@ class MinConstraint(Constraint):
 
     def __init__(self, fn, min, scale=1., damping=1.):
         super().__init__(fn, scale, damping)
-        loss = self.fn()
-        self.register_buffer('min', loss.new_tensor(min))
-        self.slack = nn.Parameter((loss - self.min).relu().pow(1/2))
+        fn_value = self.fn()
+        self.register_buffer('min', fn_value.new_tensor(min))
+        self.slack = nn.Parameter((fn_value - self.min).relu().pow(1/2))
 
     def extra_repr(self):
         return f'min={self.min:g}, scale={self.scale:g}, damping={self.damping:g}'
 
-    def infeasibility(self, loss):
-        return loss - self.min - self.slack**2
+    def infeasibility(self, fn_value):
+        return fn_value - self.min - self.slack**2
 
 
 class MinConstraintHard(Constraint):
@@ -98,8 +98,8 @@ class MinConstraintHard(Constraint):
     def extra_repr(self):
         return f'min={self.min:g}, scale={self.scale:g}, damping={self.damping:g}'
 
-    def infeasibility(self, loss):
-        return loss.clamp(min=self.min) - loss
+    def infeasibility(self, fn_value):
+        return fn_value.clamp(min=self.min) - fn_value
 
 
 class BoundConstraintHard(Constraint):
@@ -114,8 +114,8 @@ class BoundConstraintHard(Constraint):
         return f'min={self.min:g}, max={self.max:g}, ' \
                f'scale={self.scale:g}, damping={self.damping:g}'
 
-    def infeasibility(self, loss):
-        return loss.clamp(self.min, self.max) - loss
+    def infeasibility(self, fn_value):
+        return fn_value.clamp(self.min, self.max) - fn_value
 
 
 class MDMM(nn.ModuleList):
@@ -130,9 +130,9 @@ class MDMM(nn.ModuleList):
 
     def forward(self, loss):
         output = loss.clone()
-        losses = []
+        fn_values = []
         for c in self:
-            penalty, c_loss = c()
+            penalty, fn_value = c()
             output += penalty
-            losses.append(c_loss)
-        return output, losses
+            fn_values.append(fn_value)
+        return output, fn_values
