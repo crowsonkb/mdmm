@@ -4,6 +4,7 @@
 
 import argparse
 import csv
+from functools import partial
 
 import torch
 from torch import nn
@@ -53,14 +54,12 @@ def main():
 
     crit = nn.CrossEntropyLoss()
 
-    def make_constraint(layer):
-        return mdmm.EqConstraint(lambda: layer.weight.abs().mean(), args.norm,
-                                 scale=args.scale, damping=args.damping)
-
     constraints = []
     for layer in model:
         if hasattr(layer, 'weight'):
-            constraints.append(make_constraint(layer))
+            fn = partial(lambda x: x.abs().mean(), layer.weight)
+            constraints.append(mdmm.EqConstraint(fn, args.norm,
+                                                 scale=args.scale, damping=args.damping))
 
     mdmm_module = mdmm.MDMM(constraints)
     opt = mdmm_module.make_optimizer(model.parameters(), lr=args.lr)
