@@ -57,14 +57,15 @@ class MaxConstraint(Constraint):
 
     def __init__(self, fn, max, scale=1., damping=1.):
         super().__init__(fn, scale, damping)
-        fn_value = self.fn()
-        self.register_buffer('max', fn_value.new_tensor(max))
-        self.slack = nn.Parameter((self.max - fn_value).relu().pow(1/2))
+        self.register_buffer('max', torch.as_tensor(max))
+        self.slack = nn.Parameter(torch.as_tensor(float('nan')))
 
     def extra_repr(self):
         return f'max={self.max:g}, scale={self.scale:g}, damping={self.damping:g}'
 
     def infeasibility(self, fn_value):
+        if self.slack.isnan():
+            self.slack = nn.Parameter((self.max - fn_value).relu().pow(1/2))
         return self.max - fn_value - self.slack**2
 
 
@@ -87,14 +88,15 @@ class MinConstraint(Constraint):
 
     def __init__(self, fn, min, scale=1., damping=1.):
         super().__init__(fn, scale, damping)
-        fn_value = self.fn()
-        self.register_buffer('min', fn_value.new_tensor(min))
-        self.slack = nn.Parameter((fn_value - self.min).relu().pow(1/2))
+        self.register_buffer('min', torch.as_tensor(min))
+        self.slack = nn.Parameter(torch.as_tensor(float('nan')))
 
     def extra_repr(self):
         return f'min={self.min:g}, scale={self.scale:g}, damping={self.damping:g}'
 
     def infeasibility(self, fn_value):
+        if self.slack.isnan():
+            self.slack = nn.Parameter((fn_value - self.min).relu().pow(1/2))
         return fn_value - self.min - self.slack**2
 
 
