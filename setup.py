@@ -13,7 +13,8 @@ setuptools.setup(
     author_email='crowsonkb@gmail.com',
     license='MIT',
     packages=['mdmm'],
-    install_requires=['torch>=1.7.1'],
+    install_requires=['dataclasses>=0.8;python_version<"3.7"',
+                      'torch>=1.7.1'],
     python_requires=">=3.6",
     classifiers=[
         'Development Status :: 3 - Alpha',
