@@ -6,6 +6,14 @@ Here is a plot of the training loss and layer norms of `mdmm_demo_mnist.py`. Eac
 
 <img src="https://raw.githubusercontent.com/crowsonkb/mdmm/master/doc_images/mnist_layer_norms.png" width="561" height="423">
 
+## Installation
+
+`mdmm` is [on PyPI](https://pypi.org/project/mdmm/) and can be installed with:
+
+```sh
+pip install mdmm
+```
+
 ## Basic usage
 
 Creating a constraint instance, an `MDMM` instance, and the optimizer for the Lagrangian:
