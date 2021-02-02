@@ -52,3 +52,28 @@ There are six supported constraint types:
 * `BoundConstraintHard(fn, min, max)` represents a bound constraint on `fn`. It does not use slack variables.
 
 All MDMM constraints take a scale factor (`scale`) and a damping strength (`damping`) as optional arguments. The scale factor allows you to scale the computed infeasibility relative to the primary loss function's value. It may be needed if the magnitude of the primary loss function is very large or small compared to the constraint functions' magnitudes. The MDMM augments the Lagrangian with quadratic damping terms that help reduce oscillations in the infeasibilities. The damping strength can be manually decreased if there are no oscillations observed and increased if there are oscillations. The defaults for `scale` and `damping` are both 1.
+
+## A warning about lambda expressions
+
+The following code is incorrect:
+
+```python
+constraints = []
+for layer in model:
+    if hasattr(layer, 'weight'):
+        constraints.append(mdmm.EqConstraint(lambda: layer.weight.abs.mean(), 1))
+```
+
+`layer` is a free variable inside the lambda expression and will be resolved at call time to the *current* value of `layer` in the enclosing code block, which is updated by the loop, so all of the constraints will refer to the last layer! A correct version is:
+
+```python
+from functools import partial
+
+constraints = []
+for layer in model:
+    if hasattr(layer, 'weight'):
+        fn = partial(lambda x: x.weight.abs().mean(), layer)
+        constraints.append(mdmm.EqConstraint(fn, 1))
+```
+
+`partial()` captures the value of the `layer` argument inside the callable it returns, so `fn` acts on the layer it was created with.

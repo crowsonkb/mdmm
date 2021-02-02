@@ -57,7 +57,7 @@ def main():
     constraints = []
     for layer in model:
         if hasattr(layer, 'weight'):
-            fn = partial(lambda x: x.abs().mean(), layer.weight)
+            fn = partial(lambda x: x.weight.abs().mean(), layer)
             constraints.append(mdmm.EqConstraint(fn, args.norm,
                                                  scale=args.scale, damping=args.damping))
 
