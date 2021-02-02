@@ -2,9 +2,12 @@ from pathlib import Path
 
 import setuptools
 
+import mdmm
+
+
 setuptools.setup(
     name='mdmm',
-    version='0.1',
+    version=mdmm.__version__,
     description='The Modified Differential Multiplier Method (MDMM) for PyTorch.',
     long_description=(Path(__file__).resolve().parent / 'README.md').read_text(),
     long_description_content_type='text/markdown',
@@ -12,6 +15,7 @@ setuptools.setup(
     author='Katherine Crowson',
     author_email='crowsonkb@gmail.com',
     license='MIT',
+    license_files=['LICENSE'],
     packages=['mdmm'],
     install_requires=['dataclasses>=0.8;python_version<"3.7"',
                       'torch>=1.7.1'],
