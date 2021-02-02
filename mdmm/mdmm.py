@@ -35,7 +35,7 @@ class Constraint(nn.Module, metaclass=abc.ABCMeta):
         inf = self.infeasibility(fn_value)
         l_term = self.lmbda * inf
         damp_term = self.damping * inf**2 / 2
-        return ConstraintReturn(self.scale * (damp_term - l_term), fn_value, inf)
+        return ConstraintReturn(self.scale * (l_term + damp_term), fn_value, inf)
 
 
 class EqConstraint(Constraint):
