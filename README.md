@@ -37,4 +37,18 @@ Since the constraints contain parameters internal to them, you must save and loa
 
 ## Constraint details
 
-All MDMM constraints take a scale factor (`scale`) and a damping strength (`damping`) as optional arguments. The scale factor allows you to scale the computed infeasibility relative to the primary loss function's value. It may be needed if the magnitude of the primary loss function is very large or small compared to the constraint functions' magnitudes. MDMM augments the Lagrangian with quadratic damping terms that help reduce oscillations in the infeasibilities. The damping strength can be manually decreased if there are no oscillations observed and increased if there are oscillations. The defaults for both `scale` and `damping` are both 1.
+There are six supported constraint types:
+
+* `EqConstraint(fn, value)` represents an equality constraint on `fn`.
+
+* `MaxConstraint(fn, max)` represents a maximum inequality constraint on `fn` which uses a slack variable.
+
+* `MaxConstraintHard(fn, max)` represents a maximum inequality constraint on `fn` without a slack variable.
+
+* `MinConstraint(fn, min)` represents a minimum inequality constraint on `fn` which uses a slack variable.
+
+* `MinConstraintHard(fn, min)` represents a minimum inequality constraint on `fn` without a slack variable.
+
+* `BoundConstraintHard(fn, min, max)` represents a bound constraint on `fn`. It does not use slack variables.
+
+All MDMM constraints take a scale factor (`scale`) and a damping strength (`damping`) as optional arguments. The scale factor allows you to scale the computed infeasibility relative to the primary loss function's value. It may be needed if the magnitude of the primary loss function is very large or small compared to the constraint functions' magnitudes. MDMM augments the Lagrangian with quadratic damping terms that help reduce oscillations in the infeasibilities. The damping strength can be manually decreased if there are no oscillations observed and increased if there are oscillations. The defaults for `scale` and `damping` are both 1.
