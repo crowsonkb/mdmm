@@ -34,3 +34,7 @@ opt.step()
 When an `MDMM` instance is called with the value of the primary loss function, it evaluates the functions originally passed to the constraints' constructors and returns a type containing a value augmented with terms involving the constraint functions. Calling `backward()` on this value will propagate gradients into your parameters and the parameters internal to the constraints. The type `MDMM` returns also contains a list of the constraint function values and a list of the computed infeasibilities (equal to 0 when the constraint is satisfied).
 
 Since the constraints contain parameters internal to them, you must save and load the state dict of the `MDMM` instance (this contains all of the constraint buffers and parameters in the correct order) as well as the model and optimizer state dicts in order to be able to resume training from a checkpoint.
+
+## Constraint details
+
+All MDMM constraints take a scale factor (`scale`) and a damping strength (`damping`) as optional arguments. The scale factor allows you to scale the computed infeasibility relative to the primary loss function's value. It may be needed if the magnitude of the primary loss function is very large or small compared to the constraint functions' magnitudes. MDMM augments the Lagrangian with quadratic damping terms that help reduce oscillations in the infeasibilities. The damping strength can be manually decreased if there are no oscillations observed and increased if there are oscillations. The defaults for both `scale` and `damping` are both 1.
