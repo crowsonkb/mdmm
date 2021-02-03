@@ -6,13 +6,12 @@ the image total variation."""
 import argparse
 import csv
 
+import mdmm
 from PIL import Image
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torchvision.transforms import functional as TF
-
-import mdmm
 
 
 class TVLoss(nn.Module):

@@ -6,12 +6,11 @@ import argparse
 import csv
 from functools import partial
 
+import mdmm
 import torch
 from torch import nn
 from torch.utils import data
 from torchvision import datasets, transforms
-
-import mdmm
 
 BATCH_SIZE = 50
 EPOCHS = 100
