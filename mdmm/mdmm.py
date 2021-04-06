@@ -36,6 +36,8 @@ class Constraint(nn.Module, metaclass=abc.ABCMeta):
     def forward(self, x=None):
         if x is None:
             fn_value = self.fn()
+        elif type(x) in [list, tuple]:
+            fn_value = self.fn(*x)
         else:
             fn_value = self.fn(x)    
         inf = self.infeasibility(fn_value)
@@ -162,12 +164,7 @@ class MDMM(nn.ModuleList):
         if len(arg_list) == 0:
             arg_list = [None]*len(self)
         for c, arg in zip(self, arg_list):
-            if arg is None:
-                c_return = c()
-            elif type(arg) in [list, tuple]:
-                c_return = c(*arg)
-            else:
-                c_return = c(arg)
+            c_return = c(arg)
             value += c_return.value
             fn_values.append(c_return.fn_value)
             infs.append(c_return.inf)
