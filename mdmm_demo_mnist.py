@@ -37,7 +37,7 @@ def main():
     train_dl = data.DataLoader(train_set, BATCH_SIZE, shuffle=True,
                                num_workers=2, pin_memory=True)
     val_set = datasets.MNIST('data/mnist', train=False, download=True, transform=tf)
-    val_dl = data.DataLoader(train_set, BATCH_SIZE, num_workers=2, pin_memory=True)
+    val_dl = data.DataLoader(val_set, BATCH_SIZE, num_workers=2, pin_memory=True)
 
     model = nn.Sequential(
         nn.Conv2d(1, 16, 3, padding=1),
@@ -87,6 +87,7 @@ def main():
                 print('Layer weight norms:',
                       *(f'{norm.item():g}' for norm in mdmm_return.fn_values))
 
+    @torch.no_grad()
     def val():
         print('Validating...')
         model.eval()
