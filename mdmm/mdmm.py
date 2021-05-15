@@ -33,8 +33,13 @@ class Constraint(nn.Module, metaclass=abc.ABCMeta):
     def infeasibility(self, fn_value):
         ...
 
-    def forward(self):
-        fn_value = self.fn()
+    def forward(self, x=None):
+        if x is None:
+            fn_value = self.fn()
+        elif type(x) in [list, tuple]:
+            fn_value = self.fn(*x)
+        else:
+            fn_value = self.fn(x)    
         inf = self.infeasibility(fn_value)
         l_term = self.lmbda * inf
         damp_term = self.damping * inf**2 / 2
@@ -153,12 +158,15 @@ class MDMM(nn.ModuleList):
                           {'params': lambdas, 'lr': -lr},
                           {'params': slacks, 'lr': lr}])
 
-    def forward(self, loss):
+    def forward(self, loss, arg_list=[]):
         value = loss.clone()
         fn_values, infs = [], []
-        for c in self:
-            c_return = c()
+        if len(arg_list) == 0:
+            arg_list = [None]*len(self)
+        for c, arg in zip(self, arg_list):
+            c_return = c(arg)
             value += c_return.value
             fn_values.append(c_return.fn_value)
             infs.append(c_return.inf)
+
         return MDMMReturn(value, fn_values, infs)
